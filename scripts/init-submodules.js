@@ -1,10 +1,12 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const repoRoot = path.resolve(__dirname, "..");
 
-// Skip if SKIP_POSTINSTALL is set (useful for CI environments)
 if (process.env.SKIP_POSTINSTALL === "1") {
   console.log("Skipping submodule initialization (SKIP_POSTINSTALL=1)");
   process.exit(0);
@@ -12,7 +14,6 @@ if (process.env.SKIP_POSTINSTALL === "1") {
 
 const gitmodulesPath = path.join(repoRoot, ".gitmodules");
 if (!fs.existsSync(gitmodulesPath)) {
-  // Many installs (especially on Windows) don't need submodules; don't fail.
   process.exit(0);
 }
 
@@ -28,3 +29,4 @@ if (result.error) {
 }
 
 process.exit(result.status ?? 1);
+

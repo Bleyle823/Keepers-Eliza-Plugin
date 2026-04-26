@@ -90,7 +90,7 @@ ANTHROPIC_API_KEY=
 # If you fill out POSTGRES_URL, the agent will connect to your postgres instance instead of using the local path
 
 # You can override the pglite data directory
-PGLITE_DATA_DIR=
+# PGLITE_DATA_DIR=
 
 # Fill this out if you want to use Postgres
 POSTGRES_URL=
@@ -181,6 +181,9 @@ export async function getElizaDirectories(targetProjectDir?: string) {
  * @param dirPath Path to the directory
  */
 async function ensureDir(dirPath: string) {
+  if (!dirPath || dirPath.trim() === '') {
+    throw new Error('Invalid directory path (empty)');
+  }
   if (!existsSync(dirPath)) {
     await fs.mkdir(dirPath, { recursive: true });
     logger.debug({ src: 'cli', util: 'get-config', dirPath }, 'Created directory');

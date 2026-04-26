@@ -75,7 +75,7 @@ export interface EmailAccount {
  * Interface for email services
  */
 export abstract class IEmailService extends Service {
-  static override readonly serviceType = ServiceType.EMAIL;
+  static readonly serviceType = ServiceType.EMAIL;
 
   public readonly capabilityDescription = 'Email sending, receiving, and management capabilities';
 

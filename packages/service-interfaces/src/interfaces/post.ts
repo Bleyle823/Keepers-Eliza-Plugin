@@ -151,7 +151,7 @@ export interface PostAnalytics {
  * Interface for social media posting services
  */
 export abstract class IPostService extends Service {
-  static override readonly serviceType = ServiceType.POST;
+  static readonly serviceType = ServiceType.POST;
 
   public readonly capabilityDescription =
     'Social media posting and content management capabilities';

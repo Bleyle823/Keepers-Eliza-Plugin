@@ -60,7 +60,7 @@ export interface TextToSpeechOptions {
  * Interface for audio transcription and speech services
  */
 export abstract class ITranscriptionService extends Service {
-  static override readonly serviceType = ServiceType.TRANSCRIPTION;
+  static readonly serviceType = ServiceType.TRANSCRIPTION;
 
   public readonly capabilityDescription = 'Audio transcription and speech processing capabilities';
 

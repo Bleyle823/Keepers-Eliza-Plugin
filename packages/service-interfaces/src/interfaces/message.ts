@@ -115,7 +115,7 @@ export interface MessageChannel {
  * Interface for messaging services
  */
 export abstract class IMessageService extends Service {
-  static override readonly serviceType = ServiceType.MESSAGE;
+  static readonly serviceType = ServiceType.MESSAGE;
 
   public readonly capabilityDescription = 'Message sending, receiving, and management capabilities';
 

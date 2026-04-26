@@ -19,7 +19,8 @@
     "moduleDetection": "force",
     "allowArbitraryExtensions": true,
     "types": ["node"],
-    "baseUrl": "../../../",
+    // Resolve `paths` from repo root when extended by package tsconfigs
+    "baseUrl": "../../../../",
     "paths": {
       "@elizaos/core": ["packages/core/src"],
       "@elizaos/core/*": ["packages/core/src/*"],

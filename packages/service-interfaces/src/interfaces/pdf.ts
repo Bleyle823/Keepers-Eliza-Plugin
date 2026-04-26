@@ -34,7 +34,7 @@ export interface PdfConversionOptions {
  * Interface for PDF processing services
  */
 export abstract class IPdfService extends Service {
-  static override readonly serviceType = ServiceType.PDF;
+  static readonly serviceType = ServiceType.PDF;
 
   public readonly capabilityDescription = 'PDF processing, extraction, and generation capabilities';
 

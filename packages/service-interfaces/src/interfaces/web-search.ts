@@ -80,7 +80,7 @@ export interface VideoSearchOptions extends SearchOptions {
  * Interface for web search services
  */
 export abstract class IWebSearchService extends Service {
-  static override readonly serviceType = ServiceType.WEB_SEARCH;
+  static readonly serviceType = ServiceType.WEB_SEARCH;
 
   public readonly capabilityDescription = 'Web search and content discovery capabilities';
 

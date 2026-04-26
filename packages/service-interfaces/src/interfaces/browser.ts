@@ -61,7 +61,7 @@ export interface TypeOptions {
  * Interface for browser automation services
  */
 export abstract class IBrowserService extends Service {
-  static override readonly serviceType = ServiceType.BROWSER;
+  static readonly serviceType = ServiceType.BROWSER;
 
   public readonly capabilityDescription = 'Web browser automation and scraping capabilities';
 

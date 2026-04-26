@@ -51,7 +51,7 @@ export interface VideoProcessingOptions {
  * Interface for video processing and download services
  */
 export abstract class IVideoService extends Service {
-  static override readonly serviceType = ServiceType.VIDEO;
+  static readonly serviceType = ServiceType.VIDEO;
 
   public readonly capabilityDescription = 'Video download, processing, and conversion capabilities';
 

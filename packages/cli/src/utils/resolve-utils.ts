@@ -89,7 +89,16 @@ export async function resolvePgliteDir(
   // then we construct the default path using projectRoot.
   const defaultBaseDir = path.join(projectRoot, '.eliza', '.elizadb');
 
-  const base = dir ?? process.env.PGLITE_DATA_DIR ?? fallbackDir ?? defaultBaseDir;
+  const envDir = (process.env.PGLITE_DATA_DIR ?? '').trim();
+  const normalizedDir = (dir ?? '').trim();
+  const normalizedFallback = (fallbackDir ?? '').trim();
+
+  // Treat empty strings as "unset" so `PGLITE_DATA_DIR=` doesn't resolve to '' and crash mkdir.
+  const base =
+    (normalizedDir !== '' ? normalizedDir : undefined) ??
+    (envDir !== '' ? envDir : undefined) ??
+    (normalizedFallback !== '' ? normalizedFallback : undefined) ??
+    defaultBaseDir;
 
   // Resolve and migrate legacy default (<projectRoot>/.elizadb) if detected
   const resolved = expandTildePath(base, projectRoot);

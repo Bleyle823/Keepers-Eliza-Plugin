@@ -58,7 +58,7 @@ export type TransactionResult = {
  * to allow the LP Manager to interact with them in a standardized way.
  */
 export abstract class ILpService extends Service {
-  static override readonly serviceType = 'lp';
+  static readonly serviceType = 'lp';
 
   public readonly capabilityDescription = 'Provides standardized access to DEX liquidity pools.';
 

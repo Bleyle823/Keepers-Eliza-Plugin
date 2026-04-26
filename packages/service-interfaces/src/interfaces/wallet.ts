@@ -24,7 +24,7 @@ export interface WalletPortfolio {
  * It provides a standardized way for other plugins to query the state of a wallet.
  */
 export abstract class IWalletService extends Service {
-  static override readonly serviceType = ServiceType.WALLET;
+  static readonly serviceType = ServiceType.WALLET;
 
   public readonly capabilityDescription =
     'Provides standardized access to wallet balances and portfolios.';

@@ -5,7 +5,14 @@
     "sourceMap": true,
     "inlineSources": true,
     "declaration": true,
-    "noEmit": false
+    "noEmit": false,
+    "baseUrl": ".",
+    "paths": {
+      "@elizaos/core": ["../core/dist/index.d.ts"],
+      "@elizaos/core/browser": ["../core/dist/browser/index.d.ts"],
+      "@elizaos/core/node": ["../core/dist/node/index.d.ts"],
+      "@elizaos/core/*": ["../core/dist/*"]
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]

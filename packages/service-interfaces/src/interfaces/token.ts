@@ -48,7 +48,7 @@ export interface TokenData {
  * Interface for a generic service that provides token data.
  */
 export abstract class ITokenDataService extends Service {
-  static override readonly serviceType = ServiceType.TOKEN_DATA;
+  static readonly serviceType = ServiceType.TOKEN_DATA;
   public readonly capabilityDescription =
     'Provides standardized access to token market data.' as string;
 

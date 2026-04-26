@@ -2227,6 +2227,23 @@ export class AgentRuntime implements IAgentRuntime {
       provider && this.models.get(modelKey)?.find((m) => m.provider === provider);
     const handler = modelWithProvider ? modelWithProvider.handler : model;
     if (!handler) {
+      // If the runtime has no model provider configured, fail soft for TEXT models so the agent
+      // can still respond with a helpful message (common in fresh installs where API keys aren't set).
+      const textModels = new Set<string>([
+        ModelType.TEXT_SMALL,
+        ModelType.TEXT_LARGE,
+        ModelType.TEXT_REASONING_SMALL,
+        ModelType.TEXT_REASONING_LARGE,
+        ModelType.TEXT_COMPLETION,
+      ]);
+      if (textModels.has(modelKey)) {
+        this.logger.warn(
+          { src: 'agent', agentId: this.agentId, model: modelKey },
+          'No model handler registered; returning configuration guidance'
+        );
+        return `I can’t generate a reply yet because no model provider is configured.\n\nSet one of these in your .env and restart:\n- OPENAI_API_KEY=...\n- ANTHROPIC_API_KEY=...\nOr configure Ollama (OLLAMA_API_ENDPOINT=...)` as R;
+      }
+
       const errorMsg = `No handler found for delegate type: ${modelKey}`;
       throw new Error(errorMsg);
     }

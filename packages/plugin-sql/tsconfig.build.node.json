@@ -4,7 +4,14 @@
     "outDir": "dist/node",
     "declaration": true,
     "declarationMap": false,
-    "emitDeclarationOnly": true
+    "emitDeclarationOnly": true,
+    "baseUrl": ".",
+    "paths": {
+      "@elizaos/core": ["../core/dist/index.d.ts"],
+      "@elizaos/core/browser": ["../core/dist/browser/index.d.ts"],
+      "@elizaos/core/node": ["../core/dist/node/index.d.ts"],
+      "@elizaos/core/*": ["../core/dist/*"]
+    }
   },
   "include": [
     "src/index.node.ts",
