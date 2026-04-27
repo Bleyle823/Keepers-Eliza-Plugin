@@ -64,6 +64,7 @@
         "@elizaos/api-client": "workspace:*",
         "@elizaos/core": "workspace:*",
         "@elizaos/plugin-bootstrap": "workspace:*",
+        "@elizaos/plugin-keeperhub": "workspace:*",
         "@elizaos/plugin-ollama": "^1.2.4",
         "@elizaos/plugin-openai": "^1.5.18",
         "@elizaos/plugin-sql": "workspace:*",
@@ -296,7 +297,7 @@
         "whatwg-url": "7.1.0",
       },
     },
-    "packages/plugin-keeperhub": {
+    "packages/plugin-keepershub": {
       "name": "@elizaos/plugin-keeperhub",
       "version": "1.0.0",
       "dependencies": {
@@ -304,7 +305,6 @@
         "zod": "^4.3.5",
       },
       "devDependencies": {
-        "@elizaos/cli": "workspace:*",
         "typescript": "^5.9.3",
       },
     },
@@ -634,7 +634,7 @@
 
     "@elizaos/plugin-dummy-services": ["@elizaos/plugin-dummy-services@workspace:packages/plugin-dummy-services"],
 
-    "@elizaos/plugin-keeperhub": ["@elizaos/plugin-keeperhub@workspace:packages/plugin-keeperhub"],
+    "@elizaos/plugin-keeperhub": ["@elizaos/plugin-keeperhub@workspace:packages/plugin-keepershub"],
 
     "@elizaos/plugin-ollama": ["@elizaos/plugin-ollama@1.2.4", "", { "dependencies": { "@ai-sdk/ui-utils": "^1.2.8", "@elizaos/core": "^1.0.0", "ai": "^4.3.9", "js-tiktoken": "^1.0.18", "ollama-ai-provider": "^1.2.0", "tsup": "8.4.0" } }, "sha512-UYarYfp8ebA4O+/BQtXWwcpLB5J+t4ThW0xdOcvfze5ZNOU51WMprG5EV8SafbhC/qj2sVFba85IdM+t5C5FEw=="],
 

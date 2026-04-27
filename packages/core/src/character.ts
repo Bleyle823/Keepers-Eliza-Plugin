@@ -80,6 +80,10 @@ export function mergeCharacterDefaults(char: Partial<Character>): Character {
   } as Character;
 }
 
+function getKeeperHubApiKey(env: Record<string, string | undefined>): string | undefined {
+  return env.KH_API_KEY?.trim() || env.KEEPERHUB_API_KEY?.trim() || env.KEEPERSHUB_API_KEY?.trim();
+}
+
 /**
  * Build ordered plugin list based on available environment variables
  *
@@ -88,8 +92,9 @@ export function mergeCharacterDefaults(char: Partial<Character>): Character {
  * 2. Text-only LLM plugins (no embedding support)
  * 3. Embedding-capable LLM plugins
  * 4. Platform plugins (Discord, Twitter, Telegram)
- * 5. Bootstrap plugin (unless IGNORE_BOOTSTRAP is set)
- * 6. Ollama fallback (only if no other LLM providers configured)
+ * 5. Automation plugins (KeeperHub)
+ * 6. Bootstrap plugin (unless IGNORE_BOOTSTRAP is set)
+ * 7. Ollama fallback (only if no other LLM providers configured)
  *
  * @param env - Environment object to check for API keys (defaults to process.env)
  * @returns Ordered array of plugin names
@@ -118,6 +123,9 @@ export function buildCharacterPlugins(
       ? ['@elizaos/plugin-twitter']
       : []),
     ...(env.TELEGRAM_BOT_TOKEN?.trim() ? ['@elizaos/plugin-telegram'] : []),
+
+    // Automation plugins
+    ...(getKeeperHubApiKey(env) ? ['@elizaos/plugin-keeperhub'] : []),
 
     // Bootstrap plugin
     ...(() => {

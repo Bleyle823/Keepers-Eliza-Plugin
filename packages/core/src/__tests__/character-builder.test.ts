@@ -14,6 +14,7 @@ describe('buildCharacterPlugins', () => {
     DISCORD: '@elizaos/plugin-discord',
     TWITTER: '@elizaos/plugin-twitter',
     TELEGRAM: '@elizaos/plugin-telegram',
+    KEEPERHUB: '@elizaos/plugin-keeperhub',
   };
 
   let testEnv: Record<string, string | undefined>;
@@ -176,6 +177,19 @@ describe('buildCharacterPlugins', () => {
       expect(bootstrapIndex).toBeGreaterThan(-1);
       expect(bootstrapIndex).toBeGreaterThan(discordIndex);
     });
+
+    it('should place KeeperHub after platform plugins and before bootstrap', () => {
+      testEnv.DISCORD_API_TOKEN = 'discord-token';
+      testEnv.KH_API_KEY = 'kh_test-key';
+
+      const plugins = buildCharacterPlugins(testEnv);
+      const discordIndex = plugins.indexOf(PLUGINS.DISCORD);
+      const keeperhubIndex = plugins.indexOf(PLUGINS.KEEPERHUB);
+      const bootstrapIndex = plugins.indexOf(PLUGINS.BOOTSTRAP);
+
+      expect(keeperhubIndex).toBeGreaterThan(discordIndex);
+      expect(bootstrapIndex).toBeGreaterThan(keeperhubIndex);
+    });
   });
 
   describe('Complex Environment Combinations', () => {
@@ -261,6 +275,44 @@ describe('buildCharacterPlugins', () => {
 
       expect(twitterIndex).toBeGreaterThan(anthropicIndex);
       expect(twitterIndex).toBeGreaterThan(openaiIndex);
+    });
+
+    it('should include KeeperHub when KH_API_KEY is configured', () => {
+      testEnv.OPENAI_API_KEY = 'openai-key';
+      testEnv.KH_API_KEY = 'kh_test-key';
+
+      const plugins = buildCharacterPlugins(testEnv);
+
+      expect(plugins).toContain(PLUGINS.KEEPERHUB);
+      expect(plugins).not.toContain(PLUGINS.OLLAMA);
+    });
+
+    it('should include KeeperHub when KEEPERHUB_API_KEY is configured', () => {
+      testEnv.OPENAI_API_KEY = 'openai-key';
+      testEnv.KEEPERHUB_API_KEY = 'kh_test-key';
+
+      const plugins = buildCharacterPlugins(testEnv);
+
+      expect(plugins).toContain(PLUGINS.KEEPERHUB);
+      expect(plugins).not.toContain(PLUGINS.OLLAMA);
+    });
+
+    it('should include KeeperHub when KEEPERSHUB_API_KEY is configured', () => {
+      testEnv.OPENAI_API_KEY = 'openai-key';
+      testEnv.KEEPERSHUB_API_KEY = 'kh_test-key';
+
+      const plugins = buildCharacterPlugins(testEnv);
+
+      expect(plugins).toContain(PLUGINS.KEEPERHUB);
+      expect(plugins).not.toContain(PLUGINS.OLLAMA);
+    });
+
+    it('should not include KeeperHub when KH_API_KEY is blank', () => {
+      testEnv.KH_API_KEY = '   ';
+
+      const plugins = buildCharacterPlugins(testEnv);
+
+      expect(plugins).not.toContain(PLUGINS.KEEPERHUB);
     });
 
     it('should NOT include Twitter plugin with incomplete tokens', () => {

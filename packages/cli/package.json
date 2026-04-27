@@ -89,6 +89,7 @@
     "@elizaos/api-client": "workspace:*",
     "@elizaos/core": "workspace:*",
     "@elizaos/plugin-bootstrap": "workspace:*",
+    "@elizaos/plugin-keeperhub": "workspace:*",
     "@elizaos/plugin-ollama": "^1.2.4",
     "@elizaos/plugin-openai": "^1.5.18",
     "@elizaos/plugin-sql": "workspace:*",

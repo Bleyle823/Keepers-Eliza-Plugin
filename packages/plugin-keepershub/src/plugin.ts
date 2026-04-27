@@ -55,7 +55,7 @@ export const keeperhubPlugin: Plugin = {
     'KeeperHub workflow automation for ElizaOS. Manage and execute KeeperHub workflows, monitor smart contracts, interact with DeFi protocols, and automate on-chain actions via the KeeperHub MCP server.',
 
   config: {
-    KH_API_KEY: process.env.KH_API_KEY,
+    KH_API_KEY: process.env.KH_API_KEY ?? process.env.KEEPERHUB_API_KEY ?? process.env.KEEPERSHUB_API_KEY,
   },
 
   async init(config: Record<string, string>) {

@@ -46,7 +46,7 @@ export const keeperhubContextProvider: Provider = {
         keeperhubOrgId: orgId ?? '',
         keeperhubWorkflowCount: workflowCount,
       },
-      data: service.orgContext,
+      data: { ...service.orgContext },
     };
   },
 };

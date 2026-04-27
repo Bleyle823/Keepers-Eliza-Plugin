@@ -1,4 +1,4 @@
-import type { Action, IAgentRuntime } from '@elizaos/core';
+import type { Action, HandlerCallback, IAgentRuntime, Memory, State } from '@elizaos/core';
 import { extractJson, handleToolCall, validateKeeperHub } from './_helpers.ts';
 
 const WRITE_WARNING =

@@ -3,6 +3,20 @@ import { Service, type IAgentRuntime, logger } from '@elizaos/core';
 const MCP_URL = 'https://app.keeperhub.com/mcp';
 const MCP_PROTOCOL_VERSION = '2024-11-05';
 
+function getKeeperHubApiKey(runtime: IAgentRuntime): string | null {
+  const runtimeKeys = [
+    runtime.getSetting('KH_API_KEY'),
+    runtime.getSetting('KEEPERHUB_API_KEY'),
+    runtime.getSetting('KEEPERSHUB_API_KEY'),
+  ];
+  const envKeys = [process.env.KH_API_KEY, process.env.KEEPERHUB_API_KEY, process.env.KEEPERSHUB_API_KEY];
+  const apiKey = [...runtimeKeys, ...envKeys].find(
+    (value): value is string => typeof value === 'string' && value.trim().length > 0
+  );
+
+  return apiKey?.trim() ?? null;
+}
+
 export interface KeeperHubOrgContext {
   orgId: string | null;
   workflowCount: number;
@@ -26,16 +40,22 @@ export class KeeperHubService extends Service {
   static override async start(runtime: IAgentRuntime): Promise<Service> {
     logger.info('[KeeperHub] Starting KeeperHubService');
     const service = new KeeperHubService(runtime);
-    service.apiKey = runtime.getSetting('KH_API_KEY') ?? process.env.KH_API_KEY ?? null;
+    service.apiKey = getKeeperHubApiKey(runtime);
 
     if (!service.apiKey) {
-      logger.warn('[KeeperHub] KH_API_KEY not set — KeeperHub actions will fail until configured');
+      logger.warn(
+        '[KeeperHub] KH_API_KEY or KEEPERHUB_API_KEY not set — KeeperHub actions will fail until configured'
+      );
     } else {
       try {
         await service.ensureSession();
         await service.refreshOrgContext();
       } catch (err) {
-        logger.warn('[KeeperHub] Failed to initialize session at startup:', err);
+        logger.warn(
+          `[KeeperHub] Failed to initialize session at startup: ${
+            err instanceof Error ? err.message : String(err)
+          }`
+        );
       }
     }
 
