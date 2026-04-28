@@ -1,5 +1,11 @@
 import type { Action, HandlerCallback, IAgentRuntime, Memory, State } from '@elizaos/core';
-import { extractJson, handleToolCall, validateKeeperHub } from './_helpers.ts';
+import {
+  extractId,
+  extractJson,
+  handleToolCall,
+  validateKeeperHub,
+  validationError,
+} from './_helpers.ts';
 
 const WRITE_WARNING =
   '⚠️ This action submits an on-chain transaction using your KeeperHub wallet. ' +
@@ -23,13 +29,23 @@ export const executeTransferAction: Action = {
       (parsed.amount as string) ?? text.match(/amount[:\s]+([\d.]+)/i)?.[1];
     const token_address = parsed.token_address as string | undefined;
 
-    if (!network || !recipient_address || !amount) {
-      const errText = [
-        'Missing required parameters for transfer. Provide: network, recipient_address, amount.',
-        'Example: `{"network":"1","recipient_address":"0x...","amount":"0.1"}`',
-      ].join('\n');
-      if (callback) await callback({ text: errText, source: message.content.source });
-      return { success: false, error: new Error('Missing transfer parameters') };
+    const missing: string[] = [];
+    if (!network) missing.push('network');
+    if (!recipient_address) missing.push('recipient_address');
+    if (!amount) missing.push('amount');
+
+    if (missing.length > 0) {
+      return validationError(
+        [
+          `Missing required parameters for transfer: ${missing.join(', ')}.`,
+          'Provide JSON like:',
+          '`{"network":"1","recipient_address":"0x...","amount":"0.1"}`',
+        ].join('\n'),
+        `Missing fields: ${missing.join(', ')}`,
+        callback,
+        message,
+        { fields: missing }
+      );
     }
 
     const args: Record<string, unknown> = { network, recipient_address, amount };
@@ -74,13 +90,23 @@ export const executeContractCallAction: Action = {
     const function_args = parsed.function_args as string | undefined;
     const abi = parsed.abi as string | undefined;
 
-    if (!contract_address || !network || !function_name) {
-      const errText = [
-        'Missing required parameters. Provide: contract_address, network, function_name.',
-        'Example: `{"contract_address":"0x...","network":"1","function_name":"balanceOf","function_args":"[\\"0x...\\""]"}`',
-      ].join('\n');
-      if (callback) await callback({ text: errText, source: message.content.source });
-      return { success: false, error: new Error('Missing contract call parameters') };
+    const missing: string[] = [];
+    if (!contract_address) missing.push('contract_address');
+    if (!network) missing.push('network');
+    if (!function_name) missing.push('function_name');
+
+    if (missing.length > 0) {
+      return validationError(
+        [
+          `Missing required parameters for contract call: ${missing.join(', ')}.`,
+          'Provide JSON like:',
+          '`{"contract_address":"0x...","network":"1","function_name":"balanceOf","function_args":"[\\"0x...\\"]"}`',
+        ].join('\n'),
+        `Missing fields: ${missing.join(', ')}`,
+        callback,
+        message,
+        { fields: missing }
+      );
     }
 
     const args: Record<string, unknown> = { contract_address, network, function_name };
@@ -121,12 +147,16 @@ export const executeCheckAndExecuteAction: Action = {
     const missing = required.filter((k) => !parsed[k]);
 
     if (missing.length > 0) {
-      const errText = [
-        `Missing required fields: ${missing.join(', ')}.`,
-        'Provide a full JSON with: contract_address, network, function_name, condition {operator, value}, action {contract_address, function_name}.',
-      ].join('\n');
-      if (callback) await callback({ text: errText, source: message.content.source });
-      return { success: false, error: new Error(`Missing fields: ${missing.join(', ')}`) };
+      return validationError(
+        [
+          `Missing required fields for check-and-execute: ${missing.join(', ')}.`,
+          'Provide a full JSON with: contract_address, network, function_name, condition {operator, value}, action {contract_address, function_name}.',
+        ].join('\n'),
+        `Missing fields: ${missing.join(', ')}`,
+        callback,
+        message,
+        { fields: missing }
+      );
     }
 
     return handleToolCall('execute_check_and_execute', parsed, runtime, message, callback, (result) => {
@@ -157,12 +187,16 @@ export const getDirectExecutionStatusAction: Action = {
 
   handler: async (runtime: IAgentRuntime, message: Memory, _state: State | undefined, _options: Record<string, unknown> = {}, callback?: HandlerCallback) => {
     const text = message.content.text ?? '';
-    const execution_id = text.match(/(?:execution|exec|id)[:\s]+([a-z0-9_-]+)/i)?.[1];
+    const execution_id = extractId(text, ['execution_id', 'executionId', 'execution', 'exec', 'id']);
 
     if (!execution_id) {
-      const errText = 'Please provide an execution ID for the direct execution status check.';
-      if (callback) await callback({ text: errText, source: message.content.source });
-      return { success: false, error: new Error('Missing execution_id') };
+      return validationError(
+        'Please provide an execution ID for the direct execution status check.',
+        'Missing execution_id',
+        callback,
+        message,
+        { field: 'execution_id' }
+      );
     }
 
     return handleToolCall('get_direct_execution_status', { execution_id }, runtime, message, callback, (result) => {

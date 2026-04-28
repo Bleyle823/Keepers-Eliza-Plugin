@@ -1,5 +1,5 @@
 import type { Action, HandlerCallback, IAgentRuntime, Memory, State } from '@elizaos/core';
-import { handleToolCall, validateKeeperHub } from './_helpers.ts';
+import { handleToolCall, validateKeeperHub, validationError } from './_helpers.ts';
 
 export const aiGenerateWorkflowAction: Action = {
   name: 'AI_GENERATE_WORKFLOW',
@@ -16,9 +16,13 @@ export const aiGenerateWorkflowAction: Action = {
       .trim();
 
     if (!prompt) {
-      const errText = 'Please describe the workflow you want to generate. Example: "Generate a workflow that monitors USDC transfers over $10k and sends a Discord alert"';
-      if (callback) await callback({ text: errText, source: message.content.source });
-      return { success: false, error: new Error('Missing prompt') };
+      return validationError(
+        'Please describe the workflow you want to generate. Example: "Generate a workflow that monitors USDC transfers over $10k and sends a Discord alert".',
+        'Missing prompt',
+        callback,
+        message,
+        { field: 'prompt' }
+      );
     }
 
     return handleToolCall('ai_generate_workflow', { prompt }, runtime, message, callback, (result) => {

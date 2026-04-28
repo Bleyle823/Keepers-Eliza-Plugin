@@ -1,5 +1,5 @@
 import type { Action, HandlerCallback, IAgentRuntime, Memory, State } from '@elizaos/core';
-import { handleToolCall, validateKeeperHub } from './_helpers.ts';
+import { extractId, handleToolCall, validateKeeperHub, validationError } from './_helpers.ts';
 
 export const listIntegrationsAction: Action = {
   name: 'LIST_INTEGRATIONS',
@@ -36,12 +36,16 @@ export const getWalletIntegrationAction: Action = {
 
   handler: async (runtime: IAgentRuntime, message: Memory, _state: State | undefined, _options: Record<string, unknown> = {}, callback?: HandlerCallback) => {
     const text = message.content.text ?? '';
-    const integrationId = text.match(/(?:integration|wallet|id)[:\s]+([a-z0-9]+)/i)?.[1];
+    const integrationId = extractId(text, ['integrationId', 'integration', 'walletId', 'wallet', 'id']);
 
     if (!integrationId) {
-      const errText = 'Please provide an integration ID. Use "list integrations" to find available IDs.';
-      if (callback) await callback({ text: errText, source: message.content.source });
-      return { success: false, error: new Error('Missing integrationId') };
+      return validationError(
+        'Please provide an integration ID. Use **list integrations** to find available IDs.',
+        'Missing integrationId',
+        callback,
+        message,
+        { field: 'integrationId' }
+      );
     }
 
     return handleToolCall('get_wallet_integration', { integrationId }, runtime, message, callback, (result) => {

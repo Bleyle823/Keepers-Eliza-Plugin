@@ -1,5 +1,7 @@
 import type { Action, HandlerCallback, IAgentRuntime, Memory, State } from '@elizaos/core';
-import { handleToolCall, validateKeeperHub } from './_helpers.ts';
+import { extractId, handleToolCall, validateKeeperHub, validationError } from './_helpers.ts';
+
+const EXECUTION_KEYWORDS = ['executionId', 'execution', 'exec', 'id'];
 
 export const getExecutionStatusAction: Action = {
   name: 'GET_EXECUTION_STATUS',
@@ -10,12 +12,16 @@ export const getExecutionStatusAction: Action = {
 
   handler: async (runtime: IAgentRuntime, message: Memory, _state: State | undefined, _options: Record<string, unknown> = {}, callback?: HandlerCallback) => {
     const text = message.content.text ?? '';
-    const executionId = text.match(/(?:execution|exec|id)[:\s]+([a-z0-9]+)/i)?.[1];
+    const executionId = extractId(text, EXECUTION_KEYWORDS);
 
     if (!executionId) {
-      const errText = 'Please provide an execution ID. Example: "Get execution status exec123"';
-      if (callback) await callback({ text: errText, source: message.content.source });
-      return { success: false, error: new Error('Missing executionId') };
+      return validationError(
+        'Please provide an execution ID. Example: `get execution status executionId: exec_clr1k2j3a0001x9pq7e2v3w4f`.',
+        'Missing executionId',
+        callback,
+        message,
+        { field: 'executionId' }
+      );
     }
 
     return handleToolCall('get_execution_status', { executionId }, runtime, message, callback, (result) => {
@@ -49,12 +55,16 @@ export const getExecutionLogsAction: Action = {
 
   handler: async (runtime: IAgentRuntime, message: Memory, _state: State | undefined, _options: Record<string, unknown> = {}, callback?: HandlerCallback) => {
     const text = message.content.text ?? '';
-    const executionId = text.match(/(?:execution|exec|logs?|id)[:\s]+([a-z0-9]+)/i)?.[1];
+    const executionId = extractId(text, ['executionId', 'execution', 'exec', 'logs', 'id']);
 
     if (!executionId) {
-      const errText = 'Please provide an execution ID to fetch logs for.';
-      if (callback) await callback({ text: errText, source: message.content.source });
-      return { success: false, error: new Error('Missing executionId') };
+      return validationError(
+        'Please provide an execution ID to fetch logs for.',
+        'Missing executionId',
+        callback,
+        message,
+        { field: 'executionId' }
+      );
     }
 
     return handleToolCall('get_execution_logs', { executionId }, runtime, message, callback, (result) => {

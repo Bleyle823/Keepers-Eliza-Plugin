@@ -1,6 +1,13 @@
 import type { Action, HandlerCallback, IAgentRuntime, Memory, State } from '@elizaos/core';
 import { logger } from '@elizaos/core';
-import { extractJson, getService, handleToolCall, validateKeeperHub } from './_helpers.ts';
+import {
+  extractJson,
+  failureResult,
+  getService,
+  handleToolCall,
+  validateKeeperHub,
+  validationError,
+} from './_helpers.ts';
 
 /**
  * Extract a workflow slug from free-form text.
@@ -140,10 +147,13 @@ export const callWorkflowAction: Action = {
     const inputs = extractInputs(parsed);
 
     if (!slug) {
-      const errText =
-        'Please provide a workflow slug. Use SEARCH_WORKFLOWS_MARKETPLACE ("search marketplace workflows ...") to discover available slugs.';
-      if (callback) await callback({ text: errText, source: message.content.source });
-      return { success: false, error: new Error('Missing slug') };
+      return validationError(
+        'Please provide a workflow slug. Use SEARCH_WORKFLOWS_MARKETPLACE ("search marketplace workflows ...") to discover available slugs.',
+        'Missing slug',
+        callback,
+        message,
+        { field: 'slug' }
+      );
     }
 
     let svc;
@@ -151,8 +161,7 @@ export const callWorkflowAction: Action = {
       svc = getService(runtime);
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
-      if (callback) await callback({ text: `KeeperHub error: ${msg}`, source: message.content.source });
-      return { success: false, error: error instanceof Error ? error : new Error(msg) };
+      return failureResult(msg, callback, message, { tool: 'call_workflow', stage: 'service_init' });
     }
 
     // 1) Try the marketplace `call_workflow` tool first.
@@ -171,8 +180,11 @@ export const callWorkflowAction: Action = {
 
       if (!isNotFound) {
         logger.error('[KeeperHub] call_workflow failed:', msg);
-        if (callback) await callback({ text: `KeeperHub error: ${msg}`, source: message.content.source });
-        return { success: false, error: error instanceof Error ? error : new Error(msg) };
+        return failureResult(msg, callback, message, {
+          tool: 'call_workflow',
+          args: { slug, inputs },
+          stage: 'tool_call',
+        });
       }
 
       // 2) Marketplace miss. If the value looks like an opaque org workflow id,
@@ -218,8 +230,9 @@ export const callWorkflowAction: Action = {
       if (callback) await callback({ text: friendly, source: message.content.source });
       return {
         success: false,
-        error: error instanceof Error ? error : new Error(msg),
-        data: { slug, reason: 'not_found' },
+        text: friendly,
+        error: msg,
+        data: { slug, reason: 'not_found', errorMessage: msg },
       };
     }
   },

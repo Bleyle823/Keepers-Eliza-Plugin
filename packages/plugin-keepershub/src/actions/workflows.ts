@@ -1,5 +1,13 @@
-import type { Action, HandlerCallback, IAgentRuntime, Memory, State } from '@elizaos/core';
-import { extractJson, handleToolCall, validateKeeperHub } from './_helpers.ts';
+import type { Action, IAgentRuntime } from '@elizaos/core';
+import {
+  extractId,
+  extractJson,
+  handleToolCall,
+  validateKeeperHub,
+  validationError,
+} from './_helpers.ts';
+
+const WORKFLOW_KEYWORDS = ['workflowId', 'workflow', 'id'];
 
 export const listWorkflowsAction: Action = {
   name: 'LIST_WORKFLOWS',
@@ -10,8 +18,8 @@ export const listWorkflowsAction: Action = {
 
   handler: async (runtime, message, _state, _options, callback) => {
     const text = message.content.text ?? '';
-    const projectId = text.match(/project(?:Id)?[:\s]+([a-z0-9]+)/i)?.[1];
-    const tagId = text.match(/tag(?:Id)?[:\s]+([a-z0-9]+)/i)?.[1];
+    const projectId = extractId(text, ['projectId', 'project']);
+    const tagId = extractId(text, ['tagId', 'tag']);
     const args: Record<string, unknown> = {};
     if (projectId) args.projectId = projectId;
     if (tagId) args.tagId = tagId;
@@ -43,12 +51,17 @@ export const getWorkflowAction: Action = {
 
   handler: async (runtime, message, _state, _options, callback) => {
     const text = message.content.text ?? '';
-    const workflowId = text.match(/(?:workflow(?:Id)?|id)[:\s]+([a-z0-9]+)/i)?.[1];
+    const parsed = extractJson(text);
+    const workflowId = ((parsed.workflowId as string) ?? extractId(text, WORKFLOW_KEYWORDS))?.trim();
 
     if (!workflowId) {
-      const errText = 'Please provide a workflow ID. Example: "Get workflow abc123"';
-      if (callback) await callback({ text: errText, source: message.content.source });
-      return { success: false, error: new Error('Missing workflowId') };
+      return validationError(
+        'Please provide a workflow ID. Example: "Get workflow `clr1k2j3a0001x9pq7e2v3w4f`" or `{"workflowId":"..."}`.',
+        'Missing workflowId',
+        callback,
+        message,
+        { field: 'workflowId' }
+      );
     }
 
     return handleToolCall('get_workflow', { workflowId }, runtime, message, callback, (result) => {
@@ -108,12 +121,16 @@ export const updateWorkflowAction: Action = {
   handler: async (runtime, message, _state, _options, callback) => {
     const text = message.content.text ?? '';
     const parsed = extractJson(text);
-    const workflowId = (parsed.workflowId as string) ?? text.match(/(?:workflow|id)[:\s]+([a-z0-9]+)/i)?.[1];
+    const workflowId = ((parsed.workflowId as string) ?? extractId(text, WORKFLOW_KEYWORDS))?.trim();
 
     if (!workflowId) {
-      const errText = 'Please provide a workflowId to update.';
-      if (callback) await callback({ text: errText, source: message.content.source });
-      return { success: false, error: new Error('Missing workflowId') };
+      return validationError(
+        'Please provide a workflowId to update. Example: `update workflow workflowId: clr1k2j3a0001x9pq7e2v3w4f` or include `"workflowId"` in JSON.',
+        'Missing workflowId',
+        callback,
+        message,
+        { field: 'workflowId' }
+      );
     }
 
     const args: Record<string, unknown> = { workflowId };
@@ -145,12 +162,17 @@ export const deleteWorkflowAction: Action = {
 
   handler: async (runtime, message, _state, _options, callback) => {
     const text = message.content.text ?? '';
-    const workflowId = text.match(/(?:workflow|id)[:\s]+([a-z0-9]+)/i)?.[1];
+    const parsed = extractJson(text);
+    const workflowId = ((parsed.workflowId as string) ?? extractId(text, WORKFLOW_KEYWORDS))?.trim();
 
     if (!workflowId) {
-      const errText = 'Please provide a workflow ID to delete.';
-      if (callback) await callback({ text: errText, source: message.content.source });
-      return { success: false, error: new Error('Missing workflowId') };
+      return validationError(
+        'Please provide a workflow ID to delete. Example: `delete workflow workflowId: clr1k2j3a0001x9pq7e2v3w4f`.',
+        'Missing workflowId',
+        callback,
+        message,
+        { field: 'workflowId' }
+      );
     }
 
     return handleToolCall('delete_workflow', { workflowId }, runtime, message, callback, () =>
@@ -169,23 +191,36 @@ export const deleteWorkflowAction: Action = {
 export const executeWorkflowAction: Action = {
   name: 'EXECUTE_WORKFLOW',
   similes: ['execute_workflow', 'RUN_WORKFLOW', 'TRIGGER_WORKFLOW', 'START_WORKFLOW'],
-  description: 'Manually trigger a KeeperHub workflow execution. Returns an execution ID for status polling.',
+  description:
+    'Manually trigger a KeeperHub workflow execution. Returns an execution ID for status polling. Requires a workflowId — use LIST_WORKFLOWS or SEARCH_ORG_WORKFLOWS to discover ids.',
 
   validate: async (runtime) => validateKeeperHub(runtime),
 
   handler: async (runtime, message, _state, _options, callback) => {
     const text = message.content.text ?? '';
     const parsed = extractJson(text);
-    const workflowId = (parsed.workflowId as string) ?? text.match(/(?:workflow|id)[:\s]+([a-z0-9]+)/i)?.[1];
+    const workflowId = ((parsed.workflowId as string) ?? extractId(text, WORKFLOW_KEYWORDS))?.trim();
 
     if (!workflowId) {
-      const errText = 'Please provide a workflow ID to execute.';
-      if (callback) await callback({ text: errText, source: message.content.source });
-      return { success: false, error: new Error('Missing workflowId') };
+      return validationError(
+        [
+          'Please provide a workflow ID to execute.',
+          'Examples:',
+          '  - `execute workflow workflowId: clr1k2j3a0001x9pq7e2v3w4f`',
+          '  - `run workflow `clr1k2j3a0001x9pq7e2v3w4f``',
+          '  - `{"workflowId":"clr1k2j3a0001x9pq7e2v3w4f","input":{...}}`',
+          '',
+          'Use **list workflows** to discover ids.',
+        ].join('\n'),
+        'Missing workflowId',
+        callback,
+        message,
+        { field: 'workflowId' }
+      );
     }
 
     const args: Record<string, unknown> = { workflowId };
-    if (parsed.input) args.input = parsed.input;
+    if (parsed.input && typeof parsed.input === 'object') args.input = parsed.input;
 
     return handleToolCall('execute_workflow', args, runtime, message, callback, (result) => {
       const r = result as Record<string, unknown>;
@@ -196,7 +231,7 @@ export const executeWorkflowAction: Action = {
 
   examples: [
     [
-      { name: '{{user}}', content: { text: 'Run workflow abc123' } },
+      { name: '{{user}}', content: { text: 'Run workflow workflowId: clr1k2j3a0001x9pq7e2v3w4f' } },
       { name: '{{agent}}', content: { text: 'Workflow execution started!\n\n**Execution ID:** `exec456`', actions: ['EXECUTE_WORKFLOW'] } },
     ],
   ],
@@ -210,7 +245,6 @@ export const searchOrgWorkflowsAction: Action = {
   validate: async (runtime) => validateKeeperHub(runtime),
 
   handler: async (runtime, message, _state, _options, callback) => {
-    // list_workflows returns all; we filter client-side by query
     const text = message.content.text ?? '';
     const query = text.replace(/search|find|workflows?|my/gi, '').trim().toLowerCase();
 

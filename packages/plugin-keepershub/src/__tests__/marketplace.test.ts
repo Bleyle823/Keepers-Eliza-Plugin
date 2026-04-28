@@ -257,6 +257,12 @@ describe('callWorkflowAction handler', () => {
 
     expect((result as { success: boolean }).success).toBe(false);
     expect(calls.map((c) => c.name)).toEqual(['call_workflow']);
-    expect(cb.messages.join('\n')).toContain('KeeperHub error');
+    const merged = cb.messages.join('\n');
+    expect(merged).toContain('KeeperHub MCP error');
+    expect(merged).toContain('boom');
+    // Result must carry a JSON-serialisable error string, not a raw Error.
+    const errField = (result as { error?: unknown }).error;
+    expect(typeof errField).toBe('string');
+    expect(errField).toContain('boom');
   });
 });

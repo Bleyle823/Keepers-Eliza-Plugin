@@ -1,5 +1,11 @@
 import type { Action, HandlerCallback, IAgentRuntime, Memory, State } from '@elizaos/core';
-import { extractJson, handleToolCall, validateKeeperHub } from './_helpers.ts';
+import {
+  extractId,
+  extractJson,
+  handleToolCall,
+  validateKeeperHub,
+  validationError,
+} from './_helpers.ts';
 
 export const searchProtocolActionsAction: Action = {
   name: 'SEARCH_PROTOCOL_ACTIONS',
@@ -50,13 +56,18 @@ export const executeProtocolActionAction: Action = {
     const text = message.content.text ?? '';
     const parsed = extractJson(text);
 
-    const actionType = (parsed.actionType as string) ?? text.match(/action(?:Type)?[:\s]+([a-z0-9/\-_]+)/i)?.[1];
+    const actionType =
+      ((parsed.actionType as string) ?? extractId(text, ['actionType', 'action']))?.trim();
     const params = (parsed.params as Record<string, unknown>) ?? parsed;
 
     if (!actionType) {
-      const errText = 'Please provide an actionType (e.g. "aave/get-user-account-data"). Use "search protocol actions" to discover available types.';
-      if (callback) await callback({ text: errText, source: message.content.source });
-      return { success: false, error: new Error('Missing actionType') };
+      return validationError(
+        'Please provide an actionType (e.g. "aave/get-user-account-data"). Use **search protocol actions** to discover available types.',
+        'Missing actionType',
+        callback,
+        message,
+        { field: 'actionType' }
+      );
     }
 
     // Remove meta fields from params
