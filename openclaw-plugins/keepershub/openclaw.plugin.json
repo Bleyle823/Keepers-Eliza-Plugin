@@ -1,0 +1,58 @@
+{
+  "id": "keepershub",
+  "name": "KeeperHub",
+  "description": "KeeperHub workflow automation: manage and execute on-chain workflows, monitor smart contracts, and interact with DeFi protocols (Aave, Chainlink, Morpho, Uniswap, Compound, Lido, Maker) via the KeeperHub MCP API.",
+  "version": "1.0.0",
+  "activation": {
+    "onStartup": true
+  },
+  "contracts": {
+    "tools": [
+      "kh_list_workflows",
+      "kh_get_workflow",
+      "kh_create_workflow",
+      "kh_update_workflow",
+      "kh_delete_workflow",
+      "kh_execute_workflow",
+      "kh_search_org_workflows",
+      "kh_get_execution_status",
+      "kh_get_execution_logs",
+      "kh_search_templates",
+      "kh_get_template",
+      "kh_deploy_template",
+      "kh_search_plugins",
+      "kh_get_plugin",
+      "kh_list_action_schemas",
+      "kh_list_integrations",
+      "kh_get_wallet_integration",
+      "kh_search_protocol_actions",
+      "kh_execute_protocol_action",
+      "kh_execute_transfer",
+      "kh_execute_contract_call",
+      "kh_execute_check_and_execute",
+      "kh_get_direct_execution_status",
+      "kh_search_workflows_marketplace",
+      "kh_call_workflow",
+      "kh_ai_generate_workflow",
+      "kh_tools_documentation",
+      "kh_status"
+    ]
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "apiKey": {
+        "type": "string",
+        "description": "KeeperHub organization API key (starts with kh_). Falls back to KH_API_KEY / KEEPERHUB_API_KEY / KEEPERSHUB_API_KEY env vars when omitted."
+      }
+    }
+  },
+  "uiHints": {
+    "apiKey": {
+      "label": "API key",
+      "placeholder": "kh_...",
+      "sensitive": true
+    }
+  }
+}

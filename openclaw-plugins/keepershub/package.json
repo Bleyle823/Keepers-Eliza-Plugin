@@ -1,0 +1,78 @@
+{
+  "name": "openclaw-keepershub",
+  "version": "1.0.0",
+  "description": "KeeperHub workflow automation plugin for OpenClaw — wraps the full KeeperHub MCP API as agent tools so an OpenClaw agent can manage and execute on-chain workflows, monitor smart contracts, and interact with DeFi protocols.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "!src/__tests__/**",
+    "openclaw.plugin.json",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "openclaw": {
+    "extensions": ["./src/index.ts"],
+    "runtimeExtensions": ["./dist/index.js"],
+    "compat": {
+      "pluginApi": ">=2026.3.24-beta.2",
+      "minGatewayVersion": "2026.3.24-beta.2"
+    },
+    "build": {
+      "openclawVersion": "2026.3.24-beta.2",
+      "pluginSdkVersion": "2026.3.24-beta.2"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "bun test",
+    "format": "prettier --write ./src",
+    "prepublishOnly": "bun run build"
+  },
+  "dependencies": {
+    "@sinclair/typebox": "^0.34.0"
+  },
+  "peerDependencies": {
+    "openclaw": ">=2026.4.29"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.9.3"
+  },
+  "keywords": [
+    "openclaw",
+    "openclaw-plugin",
+    "clawhub",
+    "keeperhub",
+    "workflow",
+    "automation",
+    "web3",
+    "defi",
+    "smart-contracts",
+    "mcp"
+  ],
+  "license": "MIT",
+  "author": "KeeperHub",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bleyle823/Keepers-Eliza-Plugin.git",
+    "directory": "openclaw-plugins/keepershub"
+  },
+  "homepage": "https://github.com/Bleyle823/Keepers-Eliza-Plugin/tree/plugin-keepersHub/openclaw-plugins/keepershub#readme",
+  "bugs": {
+    "url": "https://github.com/Bleyle823/Keepers-Eliza-Plugin/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
