@@ -1,7 +1,7 @@
 {
   "name": "@elizaos/plugin-keeperhub",
   "description": "KeeperHub workflow automation plugin for ElizaOS — wraps all KeeperHub MCP tools as agent actions",
-  "version": "1.0.0",
+  "version": "1.7.3-alpha.0",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
