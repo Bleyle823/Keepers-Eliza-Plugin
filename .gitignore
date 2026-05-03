@@ -186,6 +186,9 @@ test-data/
 standalone.ts
 /.claude
 
+# Cursor IDE (local only)
+.cursor/
+
 # Continuous Claude cache (local only)
 .claude/cache/
 /thoughts

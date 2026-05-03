@@ -1,0 +1,91 @@
+# Phala Cloud: use a pre-built image from Docker Hub (see DOCKER_IMAGE in .env).
+# Deploy: phala cvms create --name <name> --compose ./docker-compose.phala.yaml --env-file ./.env
+#
+# Build/push locally (after Phala + Docker Hub auth):
+#   phala docker build --image <hub-user>/keepers-eliza --tag v1.0.0
+#   phala docker push
+# Then set DOCKER_IMAGE=<hub-user>/keepers-eliza:v1.0.0 in .env
+#
+# Internal DB URL (default below) matches the postgres service. For Neon or other
+# hosted Postgres, set POSTGRES_URL in .env and remove the postgres service from this file.
+
+version: '3.8'
+
+services:
+  postgres:
+    image: ankane/pgvector:latest
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: eliza
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data:rw
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d eliza']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: always
+    networks:
+      - eliza-network
+
+  eliza:
+    image: ${DOCKER_IMAGE}
+    container_name: eliza-phala
+    # Monorepo `bun run start` can take a long time before port 3000 listens; without this,
+    # edge proxies may route traffic early and browsers show ERR_EMPTY_RESPONSE.
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS http://127.0.0.1:3000/healthz >/dev/null || exit 1']
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 300s
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      SERVER_PORT: ${SERVER_PORT:-3000}
+      SERVER_HOST: ${SERVER_HOST:-0.0.0.0}
+      ELIZA_UI_ENABLE: ${ELIZA_UI_ENABLE:-true}
+
+      POSTGRES_URL: ${POSTGRES_URL:-postgresql://postgres:postgres@postgres:5432/eliza}
+
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GOOGLE_GENERATIVE_AI_API_KEY: ${GOOGLE_GENERATIVE_AI_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+
+      KH_API_KEY: ${KH_API_KEY:-}
+
+      DISCORD_APPLICATION_ID: ${DISCORD_APPLICATION_ID:-}
+      DISCORD_API_TOKEN: ${DISCORD_API_TOKEN:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+
+      EVM_CHAINS: ${EVM_CHAINS:-}
+      EVM_PROVIDER_URL: ${EVM_PROVIDER_URL:-}
+      EVM_PRIVATE_KEY: ${EVM_PRIVATE_KEY:-}
+      EVM_PUBLIC_KEY: ${EVM_PUBLIC_KEY:-}
+      EVM_WALLET_ADDRESS: ${EVM_WALLET_ADDRESS:-}
+      ETHEREUM_RPC_URL: ${ETHEREUM_RPC_URL:-}
+      BASE_RPC_URL: ${BASE_RPC_URL:-}
+      ARBITRUM_RPC_URL: ${ARBITRUM_RPC_URL:-}
+      POLYGON_RPC_URL: ${POLYGON_RPC_URL:-}
+      SOLANA_PRIVATE_KEY: ${SOLANA_PRIVATE_KEY:-}
+      BIRDEYE_API_KEY: ${BIRDEYE_API_KEY:-}
+
+    ports:
+      - '3000:3000'
+      - '50000-50100:50000-50100/udp'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: always
+    networks:
+      - eliza-network
+
+networks:
+  eliza-network:
+    driver: bridge
+
+volumes:
+  postgres-data:

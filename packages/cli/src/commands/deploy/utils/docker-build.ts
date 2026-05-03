@@ -51,8 +51,35 @@ export async function checkDockerAvailable(): Promise<boolean> {
   try {
     const versionResult = await bunExec('docker', ['--version']);
     if (!versionResult.success) return false;
+
+    // On Windows with Docker Desktop, the user's active context is often `desktop-linux`.
+    // If the default context points at `docker_engine`, `docker info` may fail even though
+    // Docker is running. Try the plain call first, then fall back to `desktop-linux`.
     const infoResult = await bunExec('docker', ['info']);
-    return infoResult.success;
+    if (infoResult.success) return true;
+
+    // Best-effort fallback: if `desktop-linux` exists, try it explicitly.
+    const contextsResult = await bunExec('docker', ['context', 'ls', '--format', '{{.Name}}'], {
+      stdio: 'ignore',
+      timeout: 5000,
+    });
+
+    if (
+      contextsResult.success &&
+      contextsResult.stdout
+        .split(/\r?\n/g)
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .includes('desktop-linux')
+    ) {
+      const desktopLinuxInfo = await bunExec('docker', ['--context', 'desktop-linux', 'info'], {
+        stdio: 'ignore',
+        timeout: 8000,
+      });
+      if (desktopLinuxInfo.success) return true;
+    }
+
+    return false;
   } catch {
     return false;
   }

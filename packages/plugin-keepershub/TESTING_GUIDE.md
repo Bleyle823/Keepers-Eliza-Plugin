@@ -873,11 +873,40 @@ KeeperHub tool error (delete_workflow): Workflow not found
 | `KeeperHubService is not running` | Plugin not loaded | Ensure `keeperhubPlugin` is in your agent's `plugins` array |
 | `KH_API_KEY is not configured` | Missing env var | Set `KH_API_KEY` in `.env` and restart |
 | `KeeperHub MCP error (401)` | Invalid or expired API key | Regenerate your API key in KeeperHub |
-| `KeeperHub tool error: Workflow not found` | Bad workflow ID | Use `LIST_WORKFLOWS` to get valid IDs |
+| `KeeperHub tool error: Workflow not found` | Bad workflow ID for an org-owned workflow | Use `LIST_WORKFLOWS` to get valid IDs |
+| `KeeperHub workflow ... was not found in the marketplace` | Slug isn't a published `listedSlug` | Run `SEARCH_WORKFLOWS_MARKETPLACE` to find valid slugs, or use `EXECUTE_WORKFLOW` with an org workflow id. The `CALL_WORKFLOW` action will auto-fall back to `EXECUTE_WORKFLOW` if the value looks like a 16+ char alphanumeric workflow id. |
 | `ABI is required. Could not auto-fetch ABI` | Unverified contract | Use a verified contract or pass `abi` field manually |
-| `Missing workflowId` | Agent couldn't parse the ID | Use exact format: `workflow id: abc123` or include ID in JSON |
+| `Missing workflowId` | Agent couldn't parse the ID | Use exact format: `workflowId: clr1k2j3a0001x9pq7e2v3w4f` (or any of `workflowId=`, `workflow `cuid``, or include `"workflowId"` in JSON). The parser deliberately rejects English-word matches like `now`/`please`/`today` to avoid sending garbage IDs upstream. |
 | `MCP server does not exist` | Cursor MCP config issue | Not a plugin error; check `~/.cursor/mcp.json` |
 | `KeeperHub initialize failed (500)` | Transient server error | Retry; if persistent, check KeeperHub status page |
+
+### Action result shape (for agent / log inspection)
+
+Every failure now returns a fully JSON-safe `ActionResult`:
+
+```json
+{
+  "success": false,
+  "text": "KeeperHub error: Workflow not found",
+  "error": "Workflow not found",
+  "data": {
+    "tool": "execute_workflow",
+    "args": { "workflowId": "..." },
+    "stage": "tool_call",
+    "errorMessage": "Workflow not found"
+  }
+}
+```
+
+If you ever see a result like `{ "success": false, "error": {} }`, that's an
+`Error` object that lost its `message`/`stack` during JSON serialization (those
+properties are non-enumerable). The plugin no longer produces this shape — all
+write actions (`EXECUTE_WORKFLOW`, `CREATE_WORKFLOW`, `UPDATE_WORKFLOW`,
+`DELETE_WORKFLOW`, `EXECUTE_TRANSFER`, `EXECUTE_CONTRACT_CALL`,
+`EXECUTE_CHECK_AND_EXECUTE`, `EXECUTE_PROTOCOL_ACTION`, `DEPLOY_TEMPLATE`,
+`AI_GENERATE_WORKFLOW`, `CALL_WORKFLOW`, etc.) consistently return `error` as
+a string. If you do see an empty error object in logs, that's a regression and
+should be reported.
 
 ---
 

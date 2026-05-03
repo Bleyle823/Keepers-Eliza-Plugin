@@ -1,5 +1,13 @@
 import type { Action, HandlerCallback, IAgentRuntime, Memory, State } from '@elizaos/core';
-import { extractJson, handleToolCall, validateKeeperHub } from './_helpers.ts';
+import {
+  extractId,
+  extractJson,
+  handleToolCall,
+  validateKeeperHub,
+  validationError,
+} from './_helpers.ts';
+
+const TEMPLATE_KEYWORDS = ['templateId', 'template', 'id'];
 
 export const searchTemplatesAction: Action = {
   name: 'SEARCH_TEMPLATES',
@@ -45,12 +53,18 @@ export const getTemplateAction: Action = {
 
   handler: async (runtime: IAgentRuntime, message: Memory, _state: State | undefined, _options: Record<string, unknown> = {}, callback?: HandlerCallback) => {
     const text = message.content.text ?? '';
-    const templateId = text.match(/(?:template|id)[:\s]+([a-z0-9]+)/i)?.[1];
+    const parsed = extractJson(text);
+    const templateId =
+      ((parsed.templateId as string) ?? extractId(text, TEMPLATE_KEYWORDS))?.trim();
 
     if (!templateId) {
-      const errText = 'Please provide a template ID. Example: "Get template abc123"';
-      if (callback) await callback({ text: errText, source: message.content.source });
-      return { success: false, error: new Error('Missing templateId') };
+      return validationError(
+        'Please provide a template ID. Example: `get template templateId: abc123` or `{"templateId":"abc123"}`. Use **search templates** to discover ids.',
+        'Missing templateId',
+        callback,
+        message,
+        { field: 'templateId' }
+      );
     }
 
     return handleToolCall('get_template', { templateId }, runtime, message, callback, (result) => {
@@ -85,13 +99,18 @@ export const deployTemplateAction: Action = {
   handler: async (runtime: IAgentRuntime, message: Memory, _state: State | undefined, _options: Record<string, unknown> = {}, callback?: HandlerCallback) => {
     const text = message.content.text ?? '';
     const parsed = extractJson(text);
-    const templateId = (parsed.templateId as string) ?? text.match(/(?:template|id)[:\s]+([a-z0-9]+)/i)?.[1];
+    const templateId =
+      ((parsed.templateId as string) ?? extractId(text, TEMPLATE_KEYWORDS))?.trim();
     const name = (parsed.name as string) ?? text.match(/(?:as|called|named)\s+"([^"]+)"/i)?.[1];
 
     if (!templateId) {
-      const errText = 'Please provide a template ID to deploy.';
-      if (callback) await callback({ text: errText, source: message.content.source });
-      return { success: false, error: new Error('Missing templateId') };
+      return validationError(
+        'Please provide a template ID to deploy. Example: `deploy template templateId: abc123 as "My Guardian"`.',
+        'Missing templateId',
+        callback,
+        message,
+        { field: 'templateId' }
+      );
     }
 
     const args: Record<string, unknown> = { templateId };
