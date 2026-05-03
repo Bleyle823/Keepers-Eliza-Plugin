@@ -1,0 +1,44 @@
+name: keepershub
+version: "1.0.0"
+description: >-
+  KeeperHub workflow automation — manage and execute on-chain workflows,
+  templates, protocol actions, marketplace workflows, and direct wallet actions
+  via the KeeperHub MCP API (parity with OpenClaw plugin).
+
+provides_tools:
+  - kh_list_workflows
+  - kh_get_workflow
+  - kh_create_workflow
+  - kh_update_workflow
+  - kh_delete_workflow
+  - kh_execute_workflow
+  - kh_search_org_workflows
+  - kh_get_execution_status
+  - kh_get_execution_logs
+  - kh_search_templates
+  - kh_get_template
+  - kh_deploy_template
+  - kh_search_plugins
+  - kh_get_plugin
+  - kh_list_action_schemas
+  - kh_list_integrations
+  - kh_get_wallet_integration
+  - kh_search_protocol_actions
+  - kh_execute_protocol_action
+  - kh_execute_transfer
+  - kh_execute_contract_call
+  - kh_execute_check_and_execute
+  - kh_get_direct_execution_status
+  - kh_search_workflows_marketplace
+  - kh_call_workflow
+  - kh_ai_generate_workflow
+  - kh_tools_documentation
+  - kh_status
+
+requires_env:
+  - name: KH_API_KEY
+    description: KeeperHub organisation API key (starts with kh_)
+    url: https://app.keeperhub.com
+    secret: true
+
+author: KeeperHub
