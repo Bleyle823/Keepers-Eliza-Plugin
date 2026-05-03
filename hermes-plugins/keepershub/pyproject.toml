@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hermes-plugin-keepershub"
+version = "1.0.0"
+description = "Hermes Agent plugin wrapping KeeperHub MCP (kh_* tools)."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+dependencies = ["httpx>=0.27"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.entry-points."hermes_agent.plugins"]
+keepershub = "keeperhub_plugin.entry:register"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["keeperhub_plugin*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
