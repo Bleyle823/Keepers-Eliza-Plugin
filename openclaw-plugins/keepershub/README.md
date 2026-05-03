@@ -1,6 +1,8 @@
-# openclaw-keepershub
+# `@keepershub/openclaw-keepershub`
 
 KeeperHub workflow automation plugin for [OpenClaw](https://docs.openclaw.ai). Wraps the full KeeperHub MCP API as native OpenClaw agent tools so your OpenClaw agent can create, manage, and execute on-chain workflows, monitor smart contracts, and interact with DeFi protocols through natural language.
+
+**Registry:** This package is published on **[ClawHub](https://docs.openclaw.ai/tools/clawhub)** as **`@keepershub/openclaw-keepershub`**. Installing by name pulls from ClawHub first (then npm fallback), which is usually all you need to add KeeperHub tools to OpenClaw.
 
 ## Features
 
@@ -15,19 +17,19 @@ KeeperHub workflow automation plugin for [OpenClaw](https://docs.openclaw.ai). W
 - **Connection status tool** — `kh_status` reports the active org and workflow count
 - **Auto-resuming MCP session** — handles 401 / 404 session expiry transparently
 
-## Installation
+## Installation (recommended)
 
-After publishing (see **Publishing** below), install by package name. OpenClaw resolves bare specs against [ClawHub](https://docs.openclaw.ai/tools/clawhub) first, then npm ([Plugins doc](https://docs.openclaw.ai/tools/plugin)):
+Install from **[ClawHub](https://docs.openclaw.ai/tools/clawhub)** via the scoped package name. OpenClaw resolves bare specs against ClawHub first, then npm ([Plugins doc](https://docs.openclaw.ai/tools/plugin)):
 
 ```bash
-openclaw plugins install openclaw-keepershub
+openclaw plugins install @keepershub/openclaw-keepershub
 ```
 
-Force the resolver when you want only one registry:
+Force a specific resolver when you want only one registry:
 
 ```bash
-openclaw plugins install clawhub:openclaw-keepershub
-openclaw plugins install npm:openclaw-keepershub
+openclaw plugins install clawhub:@keepershub/openclaw-keepershub
+openclaw plugins install npm:@keepershub/openclaw-keepershub
 ```
 
 Restart the Gateway:
@@ -36,48 +38,24 @@ Restart the Gateway:
 openclaw gateway restart
 ```
 
-### Developing from this repo (not published yet)
+## Installation from source (contributors)
 
-Install from the plugin directory path instead of the package name:
+If you maintain the plugin locally or forked [this repo](https://github.com/Bleyle823/Keepers-Eliza-Plugin), install from the directory path (**from your OpenClaw environment** — adapt the path to where `openclaw-plugins/keepershub` lives on disk):
 
 ```bash
 openclaw plugins install ./openclaw-plugins/keepershub
 openclaw gateway restart
 ```
 
+See [Development](#development) for build and tests.
+
 ### Hook packs vs plugins
 
-If OpenClaw reports **“not a valid hook pack”**, you are likely pointing a **hooks/skill pack** resolver at this package. Native OpenClaw plugins are installed with `openclaw plugins install …`, not the hooks installer.
+If OpenClaw reports **“not a valid hook pack”**, you are pointing a **hooks/skill pack** resolver at this package. Native OpenClaw plugins install with **`openclaw plugins install …`**, not the hooks installer.
 
 ## Configuration
 
-Set your KeeperHub organization API key (starts with `kh_`). After any config change, restart the Gateway (`openclaw gateway restart`).
-
-### From the CLI (recommended)
-
-Use [`openclaw config set`](https://docs.openclaw.ai/cli/config) with the plugin id `keepershub`:
-
-```bash
-# Plain value (parsed as JSON5 / string)
-openclaw config set plugins.entries.keepershub.config.apiKey "kh_your_key_here"
-
-# Optional: store the key in an env var and reference it (avoids plaintext in openclaw.json)
-export KH_API_KEY=kh_your_key_here
-openclaw config set plugins.entries.keepershub.config.apiKey \
-  --ref-provider default \
-  --ref-source env \
-  --ref-id KH_API_KEY
-```
-
-Validate before restart if you like:
-
-```bash
-openclaw config validate
-```
-
-On Windows PowerShell, use `` ` `` for line continuation instead of `\`, or put the `--ref-*` flags on one line.
-
-If `keepershub` is not in `plugins.entries` yet, install the plugin first (`openclaw plugins install …`) so the entry exists, or add it with `openclaw config patch` / `openclaw config --section plugins`.
+Set your KeeperHub organization API key (starts with `kh_`) in your OpenClaw config. After changes, **`openclaw gateway restart`** is required.
 
 ### Manual edit (`openclaw.json`)
 
@@ -95,9 +73,35 @@ If `keepershub` is not in `plugins.entries` yet, install the plugin first (`open
 }
 ```
 
+### Via OpenClaw CLI (optional)
+
+Use [`openclaw config set`](https://docs.openclaw.ai/cli/config):
+
+```bash
+openclaw config set plugins.entries.keepershub.config.apiKey "kh_your_key_here"
+```
+
+Alternatively, reference an env-backed secret ([config docs](https://docs.openclaw.ai/cli/config)):
+
+```bash
+export KH_API_KEY=kh_your_key_here
+openclaw config set plugins.entries.keepershub.config.apiKey \
+  --ref-provider default \
+  --ref-source env \
+  --ref-id KH_API_KEY
+```
+
+On Windows PowerShell, put `--ref-*` flags on one line or use PowerShell continuations (`\` is Bash-style).
+
+Validate if you want:
+
+```bash
+openclaw config validate
+```
+
 ### Environment variables only
 
-Alternatively, set one of these environment variables (the plugin checks them in order; no `openclaw.json` key required):
+The plugin also checks these in order (no `openclaw.json` key strictly required):
 
 ```env
 KH_API_KEY=kh_your_key_here
@@ -105,7 +109,7 @@ KEEPERHUB_API_KEY=kh_your_key_here
 KEEPERSHUB_API_KEY=kh_your_key_here
 ```
 
-Get an API key at [app.keeperhub.com](https://app.keeperhub.com) → Avatar → API Keys → Organisation → New API Key.
+Get an API key at [app.keeperhub.com](https://app.keeperhub.com) → **Avatar → API Keys → Organisation → New API Key**.
 
 ## Verifying the install
 
@@ -113,7 +117,7 @@ Get an API key at [app.keeperhub.com](https://app.keeperhub.com) → Avatar → 
 openclaw plugins inspect keepershub --runtime --json
 ```
 
-Then ask your OpenClaw agent to call `kh_status` — it will report whether the API key is detected, the active organization id, and the cached workflow count.
+Then ask your OpenClaw agent to call **`kh_status`** — it reports whether the API key is detected, the active organisation id, and the cached workflow count.
 
 ## Usage
 
@@ -183,92 +187,23 @@ The client lazy-initializes the MCP session on the first tool call and caches it
 
 ## Development
 
+Contributors cloning this monorepo use [TypeBox](https://github.com/sinclairzx81/typebox) for parameter schemas (`api.registerTool({ parameters })`). The `"files"` field in `package.json` excludes tests from publish tarballs.
+
 ```bash
-# Install dependencies
+# From openclaw-plugins/keepershub
 bun install
-# or: pnpm install
-
-# Run tests
 bun test
-
-# Build (generates dist/)
-bun run build
+bun run build   # generates dist/
 ```
 
-The plugin uses [TypeBox](https://github.com/sinclairzx81/typebox) for parameter schemas (the schema format OpenClaw expects in `api.registerTool({ parameters })`).
+For manifest and SDK compatibility notes, see the [OpenClaw plugin building guide](https://docs.openclaw.ai/plugins/building-plugins).
 
-The `"files"` field in `package.json` intentionally excludes `src/__tests__` so published tarballs stay lean.
-
-## Publishing
-
-Publishing requires credentials on **your** machine; nothing in this repo can publish without npm / ClawHub auth.
-
-### 1. Prerequisites
-
-- **npm account** logged in with permission to publish this package name (unscoped `openclaw-keepershub`; for a scoped name like `@yourorg/...` you must create or join that org on [npmjs.com](https://www.npmjs.com/)).
-- **Built artifacts**: `dist/` must exist before publish (`prepublishOnly` runs `tsc`).
-- Install the **ClawHub CLI** if you use ClawHub: `npm i -g clawhub` ([ClawHub](https://docs.openclaw.ai/tools/clawhub)).
-
-### 2. Publish to npm
-
-From `openclaw-plugins/keepershub/`:
-
-```bash
-npm login
-npm publish --access public
-```
-
-Dry-run (contents only, no upload):
-
-```bash
-npm publish --dry-run
-```
-
-After npm lists the package, users can install with:
-
-```bash
-openclaw plugins install npm:openclaw-keepershub
-# or bare spec (ClawHub first, then npm):
-openclaw plugins install openclaw-keepershub
-```
-
-### 3. Publish to ClawHub (recommended discovery path)
-
-Login once:
-
-```bash
-clawhub login
-```
-
-Publish from this folder or from GitHub ([ClawHub plugins](https://docs.openclaw.ai/tools/clawhub)). Provenance overrides (update **`--source-commit`** to your current `git rev-parse HEAD` when you cut a release):
-
-| Field | Value |
-| ----- | ----- |
-| **Changelog** | See [`CHANGELOG.md`](./CHANGELOG.md) for `1.0.0`, or pass a one-line summary with `--changelog "…"`. |
-| **Source repo** | `Bleyle823/Keepers-Eliza-Plugin` (or `https://github.com/Bleyle823/Keepers-Eliza-Plugin.git`) |
-| **Source commit** | `557e60a0fc1d9123435c426c14c7e1ae22773a06` |
-| **Source ref** | `plugin-keepersHub` |
-
-Single line (any shell):
-
-```bash
-cd openclaw-plugins/keepershub
-clawhub package publish . --dry-run --changelog "Initial release: 28 KeeperHub MCP tools for OpenClaw (workflows, templates, protocol actions, marketplace, kh_status)." --source-repo Bleyle823/Keepers-Eliza-Plugin --source-commit 557e60a0fc1d9123435c426c14c7e1ae22773a06 --source-ref plugin-keepersHub
-clawhub package publish . --changelog "Initial release: 28 KeeperHub MCP tools for OpenClaw (workflows, templates, protocol actions, marketplace, kh_status)." --source-repo Bleyle823/Keepers-Eliza-Plugin --source-commit 557e60a0fc1d9123435c426c14c7e1ae22773a06 --source-ref plugin-keepersHub
-```
-
-Then install:
-
-```bash
-openclaw plugins install clawhub:openclaw-keepershub
-```
-
-See the [OpenClaw plugin building guide](https://docs.openclaw.ai/plugins/building-plugins) for manifest and compatibility notes.
+Release history: [`CHANGELOG.md`](./CHANGELOG.md).
 
 ## Related
 
 - [`openclaw.plugin.json`](./openclaw.plugin.json) — plugin manifest with the full `contracts.tools` list
-- [Eliza version](../../packages/plugin-keepershub) — the original ElizaOS port this plugin mirrors
+- [KeeperHub Eliza plugin](../../packages/plugin-keepershub) — ElizaOS port this plugin mirrors
 
 ## License
 
