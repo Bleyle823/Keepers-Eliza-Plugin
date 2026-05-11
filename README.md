@@ -1,7 +1,7 @@
 <div align="center">
   <h1>Keepers Eliza Plugin</h1>
-  <p><strong>ElizaOS monorepo shipping the KeeperHub Eliza plugin — plus OpenClaw and Hermes plugin <em>sources</em></strong></p>
-  <p>Use <a href="https://app.keeperhub.com">KeeperHub</a> from agents via MCP. The <strong>Eliza</strong> integration is what this repo is built to run; OpenClaw and Hermes plugins are maintained here for you to install into <strong>their own</strong> projects.</p>
+  <p><strong>Umbrella repo: ElizaOS platform + KeeperHub plugin, plus OpenClaw and Hermes plugin packages</strong></p>
+  <p>Use <a href="https://app.keeperhub.com">KeeperHub</a> from agents via MCP. The <strong>ElizaOS</strong> stack lives under <code>Eliza/</code>; <strong>OpenClaw</strong> and <strong>Hermes</strong> integrations live in sibling directories at the repo root for their respective CLIs and publish targets.</p>
 </div>
 
 <div align="center">
@@ -14,17 +14,15 @@
 
 ## What this repository is
 
-This project is an **[ElizaOS](https://github.com/elizaos/eliza)-based monorepo** that includes **KeeperHub** integrations for three agent ecosystems. Those integrations share the same MCP behaviour, but they **do not all run inside this Eliza setup**.
+This repository groups **[KeeperHub](https://app.keeperhub.com)** integrations for three agent stacks. All three talk to KeeperHub over **HTTPS MCP** at `https://app.keeperhub.com/mcp` using an organisation API key (`kh_…`); they differ by host runtime (ElizaOS vs OpenClaw vs Hermes).
 
-### Where each piece is meant to run
+### Layout and packages
 
-| What | Paths in this repo | Where you actually use it |
+| Stack | Path in this repo | Published / install identity |
 | --- | --- | --- |
-| **KeeperHub + ElizaOS** | [`packages/plugin-keepershub`](packages/plugin-keepershub) | **Here.** This monorepo’s normal `bun install` / `elizaos` / agent workflow. Package name: **`@elizaos/plugin-keeperhub`**. |
-| **KeeperHub + OpenClaw** | [`openclaw-plugins/keepershub`](openclaw-plugins/keepershub) | **Your OpenClaw project / machine** — Gateway, CLI config, and OpenClaw docs apply. Copy or clone these files **out of this repo** (or reference a path after clone) and install with OpenClaw’s plugin commands from **that environment**. Nothing in this Eliza stack loads OpenClaw plugins. |
-| **KeeperHub + Hermes** | [`hermes-plugins/keepershub`](hermes-plugins/keepershub) | **Your Hermes Agent setup** — Hermes plugins directory, virtualenv, TUI/Telegram, etc. Copy or symlink this folder into **`~/.hermes/plugins/`** (or equivalent) on the host where Hermes runs. Do **not** expect Bun/Eliza in this repo to run Hermes. |
-
-**Summary:** Treat `openclaw-plugins/` and `hermes-plugins/` as **standalone plugin sources** bundled in this repo for distribution and versioning. Only **`@elizaos/plugin-keeperhub`** is first-class inside this ElizaOS monorepo.
+| **ElizaOS** (upstream-style monorepo + plugin) | [`Eliza/`](Eliza) — plugin [`Eliza/packages/plugin-keepershub`](Eliza/packages/plugin-keepershub) | **`@elizaos/plugin-keeperhub`** (npm) |
+| **OpenClaw** | [`openclaw-plugins/keepershub`](openclaw-plugins/keepershub) | **`openclaw-keepershub`** (npm); **[ClawHub](https://docs.openclaw.ai/tools/clawhub)** **`@keepershub/openclaw-keepershub`** for `openclaw plugins install …` |
+| **Hermes** | [`hermes-plugins/keepershub`](hermes-plugins/keepershub) | **`hermes-plugin-keepershub`** ([`pyproject.toml`](hermes-plugins/keepershub/pyproject.toml)) |
 
 ### Capability overview
 
@@ -33,8 +31,6 @@ This project is an **[ElizaOS](https://github.com/elizaos/eliza)-based monorepo*
 | **ElizaOS** | KeeperHub MCP as **Eliza actions** + service + context provider |
 | **OpenClaw** | **`openclaw-keepershub`** — **28 typed `kh_*` tools** (TypeBox), Gateway-friendly |
 | **Hermes** | Python plugin — **28 `kh_*` tools** aligned with OpenClaw (TUI / Telegram / other Hermes channels) |
-
-All three talk to KeeperHub over **HTTPS MCP** at `https://app.keeperhub.com/mcp` using an organisation API key (`kh_…`).
 
 ### Try the plugins (hosted demos)
 
@@ -89,51 +85,49 @@ Five successful **Base Sepolia** transfers from that pattern are visible on [Bas
 ## Repository layout
 
 ```
-├── packages/
-│   └── plugin-keepershub/     # @elizaos/plugin-keeperhub — USE WITH ELIZA (this repo / NPM)
+├── Eliza/                          # ElizaOS monorepo (bun install / build / elizaos — run commands here)
+│   ├── packages/
+│   │   └── plugin-keepershub/    # @elizaos/plugin-keeperhub
+│   ├── index.ts                    # Optional sample “Keeper” character wiring the plugin
+│   ├── docker-compose.phala.yaml   # Optional Phala-oriented compose
+│   └── scripts/
+│       └── deploy-phala.ps1        # Example Phala deploy helper (PowerShell)
 ├── openclaw-plugins/
-│   └── keepershub/            # SOURCE: copy/install into YOUR OpenClaw project
-├── hermes-plugins/
-│   └── keepershub/            # SOURCE: copy/install into YOUR Hermes plugins path
-├── index.ts                   # Optional sample “Keeper” character wiring the Eliza plugin (repo root)
-├── docker-compose.phala.yaml  # Optional Phala-oriented compose (see file comments)
-└── scripts/
-    └── deploy-phala.ps1       # Example Phala deploy helper (PowerShell)
+│   └── keepershub/               # OpenClaw plugin package (npm / ClawHub)
+└── hermes-plugins/
+    └── keepershub/               # Hermes Python plugin (pip / PyPI)
 ```
 
-The rest of `packages/` is standard ElizaOS platform code (CLI, server, client, core, etc.). Upstream behaviour is documented at [docs.elizaos.ai](https://docs.elizaos.ai/).
+The bulk of `Eliza/packages/` is standard ElizaOS platform code (CLI, server, client, core, etc.). Upstream behaviour is documented at [docs.elizaos.ai](https://docs.elizaos.ai/).
 
 ---
 
 ## Prerequisites
 
-**This monorepo (Eliza + `@elizaos/plugin-keeperhub`):**
+**ElizaOS tree (`Eliza/` + `@elizaos/plugin-keeperhub`):**
 
-- **[Bun](https://bun.sh/docs/installation)** (this repo pins a `packageManager`; see root `package.json`)
-- **Node.js** compatible with the version in root `package.json` `engines` (currently **23.x**)
+- **[Bun](https://bun.sh/docs/installation)** (`Eliza/` pins a `packageManager`; see [`Eliza/package.json`](Eliza/package.json))
+- **Node.js** compatible with `Eliza/package.json` `engines` (currently **23.x**)
 
-**Elsewhere — not fulfilled by `bun install` here:**
+**OpenClaw:** Gateway/CLI and config per [OpenClaw documentation](https://docs.openclaw.ai/). Consume **`openclaw-plugins/keepershub`** from this repo or from npm / ClawHub.
 
-- **OpenClaw:** an OpenClaw Gateway/CLI installation and project/config as described in [OpenClaw documentation](https://docs.openclaw.ai/). Install the KeeperHub plugin **from those instructions and paths**, using the **`openclaw-plugins/keepershub`** sources from this repository.
-- **Hermes:** Hermes Agent, Python **3.9+** (check your Hermes version), and a plugins directory — see [`hermes-plugins/keepershub/README.md`](hermes-plugins/keepershub/README.md).
+**Hermes:** Hermes Agent, Python **3.9+** (confirm against your Hermes version), plugins directory — [`hermes-plugins/keepershub/README.md`](hermes-plugins/keepershub/README.md).
 
 > **Windows:** Upstream ElizaOS often recommends **WSL 2** for the full CLI/dev experience. Native Windows may work for parts of the stack; use WSL if you hit tooling issues.
 
 ---
 
-## Developers: clone and run the monorepo
-
-From the repository root:
+## Developers: clone and run the ElizaOS monorepo
 
 ```bash
 git clone https://github.com/Bleyle823/Keepers-Eliza-Plugin.git
-cd Keepers-Eliza-Plugin
+cd Keepers-Eliza-Plugin/Eliza
 
 bun install
 bun run build
 ```
 
-Useful commands:
+Useful commands (from **`Eliza/`**):
 
 ```bash
 # Run tests (Turbo; excludes some heavy starters per root script)
@@ -147,9 +141,70 @@ bun run format
 bun run lint
 ```
 
-KeeperHub Eliza plugin developer notes and manual test ideas: [`packages/plugin-keepershub/TESTING_GUIDE.md`](packages/plugin-keepershub/TESTING_GUIDE.md).
+KeeperHub Eliza plugin developer notes and manual test ideas: [`Eliza/packages/plugin-keepershub/TESTING_GUIDE.md`](Eliza/packages/plugin-keepershub/TESTING_GUIDE.md).
 
-Developing the OpenClaw or Hermes plugins (TypeScript build / `pytest`) is optional; run those tooling commands **inside the copied plugin directory** when you iterate, or wire them into CI in a checkout of this repo. Day-to-day **OpenClaw** and **Hermes** operators should still configure plugins in **their** OpenClaw and Hermes projects as described below.
+For OpenClaw (`bun test`, `tsc`) or Hermes (`pytest`), run tooling inside [`openclaw-plugins/keepershub`](openclaw-plugins/keepershub) or [`hermes-plugins/keepershub`](hermes-plugins/keepershub) respectively.
+
+---
+
+## Clone plugin trees and publish
+
+### Full clone
+
+```bash
+git clone https://github.com/Bleyle823/Keepers-Eliza-Plugin.git
+cd Keepers-Eliza-Plugin
+```
+
+### Sparse checkout (one plugin folder)
+
+```bash
+git clone --filter=blob:none --no-checkout https://github.com/Bleyle823/Keepers-Eliza-Plugin.git keeperhub-plugins
+cd keeperhub-plugins
+git sparse-checkout init --cone
+# Choose one:
+git sparse-checkout set openclaw-plugins/keepershub
+# git sparse-checkout set hermes-plugins/keepershub
+# git sparse-checkout set Eliza
+git checkout main
+```
+
+Use a full **`Eliza/`** checkout for ElizaOS platform work; sparse-checkout of only `Eliza/packages/plugin-keepershub` leaves out most workspace packages.
+
+### Publish ElizaOS (`@elizaos/plugin-keeperhub`)
+
+1. Complete setup under [`Eliza/`](Eliza) (`bun install`, `bun run build`).
+2. Bump `version` in [`Eliza/packages/plugin-keepershub/package.json`](Eliza/packages/plugin-keepershub/package.json) (or use Lerna version scripts from **`Eliza/`**: `bun run version:patch`, `version:beta`, etc.).
+3. Publish using the ElizaOS monorepo release flow from **`Eliza/`**: `bun run release`, `release:beta`, or `release:alpha` (Lerna `from-package`), matching how upstream ElizaOS ships packages.
+
+Consumers install with `bun add @elizaos/plugin-keeperhub` / `npm install @elizaos/plugin-keeperhub`.
+
+### Publish OpenClaw (npm / ClawHub)
+
+From [`openclaw-plugins/keepershub`](openclaw-plugins/keepershub):
+
+```bash
+cd openclaw-plugins/keepershub
+bun install
+bun run build    # also runs via prepublishOnly on publish
+npm publish      # package name: openclaw-keepershub — see package.json
+```
+
+For registry publication on **ClawHub** so users can `openclaw plugins install @keepershub/openclaw-keepershub`, follow [OpenClaw ClawHub docs](https://docs.openclaw.ai/tools/clawhub) and [`openclaw-plugins/keepershub/README.md`](openclaw-plugins/keepershub/README.md).
+
+### Publish Hermes (PyPI)
+
+From [`hermes-plugins/keepershub`](hermes-plugins/keepershub):
+
+```bash
+cd hermes-plugins/keepershub
+pip install build twine
+# bump version in pyproject.toml
+python -m build
+twine upload dist/*
+```
+
+This publishes **`hermes-plugin-keepershub`** with the `hermes_agent.plugins` entry point declared in [`pyproject.toml`](hermes-plugins/keepershub/pyproject.toml).
 
 ---
 
@@ -166,17 +221,17 @@ KH_API_KEY=kh_your_key_here
 # KEEPERSHUB_API_KEY=...
 ```
 
-Never commit real keys. Use `.env` / your host’s secret store. Root `.gitignore` excludes `.env` and similar patterns.
+Never commit real keys. Use `.env` / your host’s secret store. [`Eliza/.gitignore`](Eliza/.gitignore) excludes `.env` and similar patterns for the ElizaOS tree.
 
 ---
 
 ## Integrating the ElizaOS plugin (`@elizaos/plugin-keeperhub`)
 
-**Use this path if you run agents from this repo (or consume the package on NPM):** `@elizaos/plugin-keeperhub` is the **only** KeeperHub plugin intended to plug into Eliza inside this ElizaOS monorepo. OpenClaw and Hermes sources are unrelated to `elizaos start` unless you deliberately write custom bridging code (not shipped here).
+**Use this path when you run agents from [`Eliza/`](Eliza) or install from npm.** Register **`@elizaos/plugin-keeperhub`** on your ElizaOS runtime / character `plugins` array.
 
 **1. Workspace / path dependency (this repo)**
 
-The package already lives at `packages/plugin-keepershub`. In another package or app in the same workspace, depend on it via `workspace:*` or your monorepo’s linking rules.
+The package lives at [`Eliza/packages/plugin-keepershub`](Eliza/packages/plugin-keepershub). In another package or app inside **`Eliza/`**, depend on it via `workspace:*` or your monorepo’s linking rules.
 
 **2. Published NPM (consumers outside this repo)**
 
@@ -203,17 +258,19 @@ plugins: [
 
 **4. Character strings**
 
-Point the model at KeeperHub for workflow and on-chain tasks in `system` / `bio` if you want consistent routing (see root [`index.ts`](index.ts) for a sample **“Keeper”** character that adds `@elizaos/plugin-keeperhub` and KeeperHub-oriented prompts).
+Point the model at KeeperHub for workflow and on-chain tasks in `system` / `bio` if you want consistent routing (see [`Eliza/index.ts`](Eliza/index.ts) for a sample **“Keeper”** character that adds `@elizaos/plugin-keeperhub` and KeeperHub-oriented prompts).
 
-Full action list and examples: [`packages/plugin-keepershub/README.md`](packages/plugin-keepershub/README.md).
+Full action list and examples: [`Eliza/packages/plugin-keepershub/README.md`](Eliza/packages/plugin-keepershub/README.md).
 
 ---
 
 ## Integrating the OpenClaw plugin (`openclaw-keepershub`)
 
-**Do not run this inside the Eliza monorepo as part of Eliza.** OpenClaw is a separate stack (Gateway, `openclaw` CLI, `openclaw.json`, etc.). This repository only hosts the plugin **source**.
+Use OpenClaw’s Gateway and CLI (`openclaw.json`, env, etc.) as described in [OpenClaw plugin docs](https://docs.openclaw.ai/tools/plugin). Recommended install is **`openclaw plugins install @keepershub/openclaw-keepershub`** or **`npm:@keepershub/openclaw-keepershub`** / **`clawhub:@keepershub/openclaw-keepershub`** — see [`openclaw-plugins/keepershub/README.md`](openclaw-plugins/keepershub/README.md).
 
-1. Clone or download this repo (or copy the folder) so you have **`openclaw-plugins/keepershub`** on disk.
+**From a checkout of this repo:**
+
+1. Ensure **`openclaw-plugins/keepershub`** exists on disk (full clone or sparse checkout above).
 2. On the **machine and working directory where you manage OpenClaw** (your OpenClaw project / install), install the plugin by pointing OpenClaw at that directory. Example — adjust `PATH_TO_REPO` to where you cloned **this** repo (or move the folder next to your OpenClaw config):
 
 ```bash
@@ -243,9 +300,9 @@ Complete install options (npm / ClawHub), tool table, architecture, and publishi
 
 ## Integrating the Hermes plugin
 
-**Hermes is not part of this Eliza app.** Agent channels (TUI, Telegram, etc.) and plugin loading belong to **your Hermes Agent installation**. This repo only ships the **`hermes-plugins/keepershub`** source tree.
+Install into **[Hermes Agent](https://hermes-agent.nousresearch.com/)** using its plugins directory and CLI. Source for this integration: [`hermes-plugins/keepershub`](hermes-plugins/keepershub).
 
-1. Obtain **`hermes-plugins/keepershub`** from a clone or archive of **this repository**.
+1. Obtain **`hermes-plugins/keepershub`** from a clone or archive of **this repository** (or **`pip install hermes-plugin-keepershub`** after it is published—see [Publish Hermes (PyPI)](#publish-hermes-pypi)).
 2. On the host where Hermes runs, install into Hermes’s plugin location (adapt paths if your distro uses another plugins root):
 
 **Directory install (typical):**
@@ -263,7 +320,7 @@ cd PATH_TO_REPO/hermes-plugins/keepershub
 pip install -e ".[dev]"
 ```
 
-**Environment:** `plugin.yaml` declares **`KH_API_KEY`**. Hermes can prompt on `hermes plugins install` and store values in Hermes’s **`.env`** (not Eliza’s).
+**Environment:** `plugin.yaml` declares **`KH_API_KEY`**. Hermes can prompt on `hermes plugins install` and store values in Hermes’s **`.env`**.
 
 **Tests** (developers, from a checkout of this repo):
 
@@ -278,22 +335,24 @@ Details: [`hermes-plugins/keepershub/README.md`](hermes-plugins/keepershub/READM
 
 ## Optional: Phala and Docker
 
-- **`docker-compose.phala.yaml`** — compose stack oriented toward Phala deployment; adjust images and secrets for your environment.
-- **`scripts/deploy-phala.ps1`** — PowerShell helper to drive a deploy flow; review and edit paths and remotes before use.
-- **`Dockerfile`** / **`bun run docker:*`** — follow root `package.json` scripts and upstream ElizaOS Docker patterns where applicable.
+Paths below are under **`Eliza/`**:
+
+- **`Eliza/docker-compose.phala.yaml`** — compose stack oriented toward Phala deployment; adjust images and secrets for your environment.
+- **`Eliza/scripts/deploy-phala.ps1`** — PowerShell helper to drive a deploy flow; review and edit paths and remotes before use.
+- **`Eliza/Dockerfile`** / **`bun run docker:*`** — follow [`Eliza/package.json`](Eliza/package.json) scripts and upstream ElizaOS Docker patterns where applicable.
 
 ---
 
 ## Contributing and issues
 
-- Use the templates under [`.github/ISSUE_TEMPLATE`](.github/ISSUE_TEMPLATE) for bugs and features.
-- For **KeeperHub plugin** changes, prefer focused PRs scoped to `packages/plugin-keepershub`, `openclaw-plugins/keepershub`, or `hermes-plugins/keepershub` with tests when possible.
+- Use the templates under [`Eliza/.github/ISSUE_TEMPLATE`](Eliza/.github/ISSUE_TEMPLATE) for bugs and features affecting the ElizaOS tree.
+- For **KeeperHub plugin** changes, prefer focused PRs scoped to `Eliza/packages/plugin-keepershub`, `openclaw-plugins/keepershub`, or `hermes-plugins/keepershub` with tests when possible.
 
 ---
 
 ## Upstream and credits
 
-This repository **builds on [ElizaOS](https://github.com/elizaos/eliza)** (monorepo layout, CLI, server, client, and ecosystem packages). The **KeeperHub Eliza plugin** lives in **`packages/plugin-keepershub`**; **OpenClaw** and **Hermes** KeeperHub plugins are included as portable sources intended for separate OpenClaw and Hermes projects.
+The **`Eliza/`** directory **tracks [ElizaOS](https://github.com/elizaos/eliza)** (monorepo layout, CLI, server, client, ecosystem packages). The **KeeperHub Eliza plugin** is **`Eliza/packages/plugin-keepershub`**. **OpenClaw** and **Hermes** KeeperHub packages live alongside **`Eliza/`** at the repository root for npm / ClawHub and PyPI workflows respectively.
 
 If you cite Eliza in research, see the upstream [README](https://github.com/elizaos/eliza) for the recommended BibTeX entry.
 
